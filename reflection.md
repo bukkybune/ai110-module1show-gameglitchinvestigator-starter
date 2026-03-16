@@ -53,14 +53,29 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 ## 4. What did you learn about Streamlit and state?
 
 - In your own words, explain why the secret number kept changing in the original app.
+
+  Every time you clicked "Submit", Streamlit re-ran the entire `app.py` script from top to bottom. The line `secret = random.randint(low, high)` was not inside a session state guard, so it generated a brand new number on every rerun. Because the secret kept changing, you were essentially chasing a moving target — you could never actually win.
+
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+
+  Imagine every button click causes the whole Python script to restart from scratch, like refreshing a webpage. Any variable you created the last time the script ran is gone. `st.session_state` is like a notebook that survives those restarts — you write something in it once and it stays there across every rerun until you deliberately change or clear it.
+
 - What change did you make that finally gave the game a stable secret number?
+
+  The fix was wrapping the secret generation in `if "secret" not in st.session_state:` so the random number is only picked once, the very first time the app loads. Every subsequent rerun skips that line and reads the existing value from session state instead of rolling a new one.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
 - What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
+
+  Writing targeted pytest cases immediately after identifying a bug — before and after the fix. Having a test that specifically reproduces the broken behavior (like `check_guess(9, 50)` for the string-comparison bug) made it impossible to accidentally reintroduce the same bug later without noticing. I want to keep that habit of writing the test that would have caught the bug first.
+
 - What is one thing you would do differently next time you work with AI on a coding task?
+
+  I would run the existing tests before asking the AI to add new ones. In this project, the three starter tests were already broken (comparing a tuple to a plain string), but I only discovered that after Claude added new tests and I ran the full suite. Checking the baseline test state first would have saved that round of confusion.
+
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+
+  I used to assume that if AI-generated code ran without crashing, it was probably correct. This project showed me that code can run fine and still be subtly wrong in ways that only appear under specific conditions — like a bug that only triggers on even-numbered attempts — so I now treat AI output as a starting draft that needs deliberate verification, not a finished product.
