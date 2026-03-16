@@ -49,3 +49,9 @@ A number guessing game built with Streamlit where the player picks a difficulty,
 **pytest results — all 6 tests passing:**
 
 ![pytest results](pytest-results.png)
+
+## 🚀 Stretch Features
+
+**Challenge 4: Enhanced Game UI**
+
+![Enhanced Game UI](Enhanced%20Game%20UI.png)

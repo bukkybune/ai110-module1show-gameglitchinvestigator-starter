@@ -27,6 +27,10 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
+# Challenge 4: show a live score and attempts-left counter in the sidebar
+st.sidebar.divider()
+st.sidebar.header("📊 Stats")
+
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
@@ -42,12 +46,14 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+attempts_left = attempt_limit - st.session_state.attempts
+st.sidebar.metric("Score", st.session_state.score)
+st.sidebar.metric("Attempts left", attempts_left)
+
 st.subheader("Make a guess")
 
-st.info(
-    f"Guess a number between 1 and 100. "
-    f"Attempts left: {attempt_limit - st.session_state.attempts}"
-)
+# Challenge 4: replace plain st.info with a colour-coded range banner
+st.info(f"Guess a number between **{low}** and **{high}**. You have **{attempts_left}** attempt(s) left.")
 
 with st.expander("Developer Debug Info"):
     st.write("Secret:", st.session_state.secret)
@@ -88,6 +94,30 @@ if st.session_state.status != "playing":
         st.success("You already won. Start a new game to play again.")
     else:
         st.error("Game over. Start a new game to try again.")
+
+    # Challenge 4: show a session summary table when the game ends
+    if st.session_state.history:
+        st.subheader("📋 Session Summary")
+        rows = []
+        for i, g in enumerate(st.session_state.history, start=1):
+            if isinstance(g, int):
+                diff = g - st.session_state.secret
+                if diff == 0:
+                    closeness = "🎯 Exact!"
+                elif abs(diff) <= 3:
+                    closeness = "🔥 Very hot"
+                elif abs(diff) <= 10:
+                    closeness = "♨️ Warm"
+                elif abs(diff) <= 20:
+                    closeness = "🌤️ Cool"
+                else:
+                    closeness = "🧊 Cold"
+                direction = "✅ Correct" if diff == 0 else ("⬇️ Too High" if diff > 0 else "⬆️ Too Low")
+                rows.append({"Attempt": i, "Guess": g, "Direction": direction, "How close?": closeness})
+            else:
+                rows.append({"Attempt": i, "Guess": str(g), "Direction": "❌ Invalid", "How close?": "—"})
+        st.table(rows)
+
     st.stop()
 
 if submit:
@@ -109,8 +139,19 @@ if submit:
         # pytest case (test_single_digit_guess_vs_two_digit_secret_is_too_low).
         outcome, message = check_guess(guess_int, st.session_state.secret)
 
+        # Challenge 4: colour-coded hot/cold hint with proximity emoji
         if show_hint:
-            st.warning(message)
+            diff = abs(guess_int - st.session_state.secret)
+            if outcome == "Win":
+                pass  # handled below
+            elif diff <= 3:
+                st.error(f"🔥 Very hot! {message}")
+            elif diff <= 10:
+                st.warning(f"♨️ Warm! {message}")
+            elif diff <= 20:
+                st.info(f"🌤️ Cool... {message}")
+            else:
+                st.info(f"🧊 Cold! {message}")
 
         st.session_state.score = update_score(
             current_score=st.session_state.score,
